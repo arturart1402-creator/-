@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#d8b4ff">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<title>Ниндзя — Магазин и усилители</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f3f8fc;font-family:system-ui,-apple-system,sans-serif;color:#172333}
+main{max-width:620px;margin:auto;padding:14px}.tabs{display:flex;gap:8px;align-items:center;margin-bottom:10px}.tabs button,.controls button,.buy{min-height:46px;padding:9px 14px;border:1px solid #9eb2c0;border-radius:14px;background:#fff;color:#172333;font-weight:800;font-size:15px}.tabs .active,.controls .active{background:#d8b4ff}.stars{margin-left:auto;background:#fff;border:1px solid #b8c9d6;border-radius:12px;padding:9px 12px;font-weight:900}.hud{display:flex;justify-content:space-between;gap:7px;margin-bottom:10px;font-weight:800}.pill{background:#fff;border:1px solid #b8c9d6;border-radius:12px;padding:8px 10px}.arena{background:linear-gradient(#e9f8ff,#b9dcf2);border:2px solid #789ab0;border-radius:20px;overflow:hidden;touch-action:none}.arena canvas{display:block;width:100%;aspect-ratio:3/4}.controls{display:flex;justify-content:center;gap:9px;margin-top:10px}.hint{text-align:center;color:#526577;font-size:13px;margin-top:8px}.shop{display:none}.shop.open{display:block}.cards{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.card{background:#fff;border:1px solid #b8c9d6;border-radius:16px;padding:14px}.card h3{margin:0 0 5px}.card p{margin:4px 0 10px;color:#526577;font-size:13px}.price{font-weight:900;margin-bottom:8px}.buy{width:100%}.msg{text-align:center;min-height:24px;font-weight:800;margin:8px 0}@media(max-width:420px){.cards{grid-template-columns:1fr}.hud{font-size:13px}}
+</style>
+</head>
+<body>
+<main id="app">
+<div class="tabs"><button id="gameTab" class="active">🎮 Игра</button><button id="shopTab">🛒 Магазин</button><div class="stars">⭐ <span id="stars">0</span></div></div>
+<section id="game">
+<div class="hud"><div class="pill">❤️ <span id="hp">3</span></div><div class="pill">⭐ Раунд: <span id="roundStars">0</span></div><div class="pill">⏱️ <span id="time">30</span></div></div>
+<div class="arena"><canvas id="canvas" width="480" height="640"></canvas></div>
+<div class="controls"><button id="left">◀ Влево</button><button id="start" class="active">Играть</button><button id="right">Вправо ▶</button></div>
+<div class="hint">Уворачивайся от 👹 и 🪨. Звёзды сохраняются между раундами.</div>
+</section>
+<section id="shop" class="shop">
+<div class="msg" id="msg"></div>
+<div class="cards">
+<div class="card"><h3>⚡ Скорость</h3><p>Движение в 2 раза быстрее на следующий раунд.</p><div class="price">⭐ 50</div><button class="buy" data-item="speed">Купить</button></div>
+<div class="card"><h3>🦘 Прыжок</h3><p>Прыжки помогают перепрыгивать опасности.</p><div class="price">⭐ 70</div><button class="buy" data-item="jump">Купить</button></div>
+<div class="card"><h3>👻 Невидимость</h3><p>Враги не могут задеть тебя 10 секунд.</p><div class="price">⭐ 100</div><button class="buy" data-item="invisible">Купить</button></div>
+<div class="card"><h3>❤️ Щит</h3><p>Защищает от одного столкновения.</p><div class="price">⭐ 80</div><button class="buy" data-item="shield">Купить</button></div>
+</div></section>
+</main>
+<script>
+(()=>{const $=s=>document.querySelector(s),c=$("#canvas"),x=c.getContext("2d");let stars=Number(localStorage.getItem("ninjaStars")||0),run=false,last=0,time=30,hp=3,roundStars=0,spawn=0,en=[],inv=0,shield=false,speed=false,jump=false,p={x:240,y:565};const k={l:false,r:false};
+function save(){localStorage.setItem("ninjaStars",stars)}function ui(){$("#stars").textContent=stars;$("#roundStars").textContent=roundStars;$("#hp").textContent=hp;$("#time").textContent=Math.ceil(time)}
+function draw(){x.clearRect(0,0,480,640);x.fillStyle="#e9f8ff";x.fillRect(0,0,480,640);x.strokeStyle="#b9d5e3";for(let i=0;i<10;i++){x.beginPath();x.moveTo(i*48,0);x.lineTo(i*48,640);x.stroke()}for(let j=0;j<16;j++){x.beginPath();x.moveTo(0,j*40);x.lineTo(480,j*40);x.stroke()}x.font="44px sans-serif";x.textAlign="center";x.textBaseline="middle";x.fillText(inv>0?"👻":"🥷",p.x,p.y);en.forEach(e=>x.fillText(e.k,e.x,e.y));if(inv>0){x.font="bold 18px sans-serif";x.fillStyle="#6236a0";x.fillText("НЕВИДИМОСТЬ "+Math.ceil(inv)+"с",240,25)}}
+function reset(){run=false;time=30;hp=3;roundStars=0;spawn=0;last=0;en=[];inv=0;shield=false;speed=false;jump=false;p={x:240,y:565};ui();draw()}
+function end(){run=false;stars+=roundStars;roundStars=0;save();ui();draw();setTimeout(()=>alert("Раунд завершён! Звёзды сохранены ⭐"),20)}
+function spawnE(){en.push({x:25+Math.random()*430,y:-30,k:Math.random()<.4?"🪨":"👹",s:130+Math.random()*90})}
+function loop(t){if(!run)return;if(!last)last=t;let d=Math.min(.04,(t-last)/1000);last=t;time-=d;if(inv>0)inv=Math.max(0,inv-d);if(time<=0){time=0;end();return}let mv=(speed?600:300)*d;if(k.l)p.x-=mv;if(k.r)p.x+=mv;p.x=Math.max(25,Math.min(455,p.x));p.y=jump?555+Math.sin((t/180)%Math.PI)*-75:565;spawn-=d;if(spawn<=0){spawnE();spawn=Math.max(.22,.6-roundStars/1000)}for(let i=en.length-1;i>=0;i--){let e=en[i];e.y+=e.s*d;if(inv<=0&&Math.abs(p.x-e.x)<38&&Math.abs(p.y-e.y)<42){en.splice(i,1);if(shield)shield=false;else hp--;if(hp<=0){end();return}}else if(e.y>680){en.splice(i,1);roundStars+=10}}ui();draw();requestAnimationFrame(loop)}
+$("#start").onclick=()=>{reset();run=true;requestAnimationFrame(loop)};function hold(sel,key){let b=$(sel);b.onpointerdown=e=>{e.preventDefault();k[key]=true};["pointerup","pointercancel","pointerleave"].forEach(v=>b.addEventListener(v,()=>k[key]=false))}hold("#left","l");hold("#right","r");
+$("#gameTab").onclick=()=>{$("#game").style.display="block";$("#shop").classList.remove("open");$("#gameTab").classList.add("active");$("#shopTab").classList.remove("active")};$("#shopTab").onclick=()=>{$("#game").style.display="none";$("#shop").classList.add("open");$("#shopTab").classList.add("active");$("#gameTab").classList.remove("active")};
+const prices={speed:50,jump:70,invisible:100,shield:80};document.querySelectorAll(".buy").forEach(b=>b.onclick=()=>{let item=b.dataset.item,p=prices[item];if(stars<p){$("#msg").textContent="Не хватает ⭐";return}stars-=p;if(item==="speed")speed=true;if(item==="jump")jump=true;if(item==="invisible")inv=10;if(item==="shield")shield=true;save();ui();$("#msg").textContent="Куплено! "+({speed:"⚡",jump:"🦘",invisible:"👻",shield:"❤️"})[item]});reset();
+if("serviceWorker" in navigator)navigator.serviceWorker.register("./sw.js").catch(()=>{});
+})();
+</script>
+</body></html>
